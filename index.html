@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Terminal Login</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background-color: #1a1a1a;
+      color: #00ff00;
+      font-family: 'Courier New', Courier, monospace;
+    }
+    #terminal {
+      width: 100%;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    #output {
+      width: 80%;
+      max-width: 600px;
+      height: 300px;
+      background-color: #000;
+      border: 2px solid #00ff00;
+      padding: 10px;
+      overflow-y: auto;
+      margin-bottom: 10px;
+    }
+    #input {
+      width: 80%;
+      max-width: 600px;
+      background-color: #000;
+      border: 2px solid #00ff00;
+      color: #00ff00;
+      padding: 5px;
+      outline: none;
+    }
+    #main-page {
+      display: none;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: center;
+      min-height: 100vh;
+      background-color: #1a1a1a;
+      color: #00ff00;
+      padding: 20px;
+    }
+    .section {
+      display: none;
+      width: 80%;
+      max-width: 600px;
+      margin-top: 20px;
+    }
+    .section.active {
+      display: block;
+    }
+    .section textarea, .section input {
+      width: 100%;
+      background-color: #000;
+      border: 2px solid #00ff00;
+      color: #00ff00;
+      padding: 10px;
+      resize: none;
+      outline: none;
+      margin-bottom: 10px;
+    }
+    .section .output {
+      width: 100%;
+      max-height: 300px;
+      background-color: #000;
+      border: 2px solid #00ff00;
+      padding: 10px;
+      overflow-y: auto;
+      margin-bottom: 10px;
+    }
+    .report, .project {
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    .report:hover, .project:hover {
+      background-color: #00ff00;
+      color: #000;
+    }
+    .report-content {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+  </style>
+</head>
+<body>
+  <div id="terminal">
+    <div id="output"></div>
+    <input id="input" type="text" placeholder="> Entrez votre commande..." autocomplete="off">
+  </div>
+  <div id="main-page">
+    <h1 class="text-4xl mb-4">Bienvenue, <span id="username-display"></span> !</h1>
+    <div class="flex space-x-4 mb-4">
+      <button id="reports-btn" class="bg-green-600 text-black px-4 py-2 rounded hover:bg-green-500">Rapports</button>
+      <button id="discussions-btn" class="bg-green-600 text-black px-4 py-2 rounded hover:bg-green-500">Discussions</button>
+      <button id="missions-btn" class="bg-green-600 text-black px-4 py-2 rounded hover:bg-green-500">Missions</button>
+      <button id="projects-btn" class="bg-green-600 text-black px-4 py-2 rounded hover:bg-green-500">Projets</button>
+      <button id="logout" class="bg-red-600 text-black px-4 py-2 rounded hover:bg-red-500">Déconnexion</button>
+    </div>
+    <div id="reports" class="section">
+      <h2 class="text-2xl mb-2">Rapports</h2>
+      <textarea id="report-input" rows="4" placeholder="Écrivez votre rapport..."></textarea>
+      <button id="submit-report" class="mt-2 bg-green-600 text-black px-4 py-2 rounded hover:bg-green-500">Soumettre</button>
+      <div id="reports-output" class="output"></div>
+    </div>
+    <div id="discussions" class="section">
+      <h2 class="text-2xl mb-2">Discussions</h2>
+      <textarea id="discussion-input" rows="4" placeholder="Écrivez votre message..."></textarea>
+      <button id="submit-discussion" class="mt-2 bg-green-600 text-black px-4 py-2 rounded hover:bg-green-500">Envoyer</button>
+      <div id="discussions-output" class="output"></div>
+    </div>
+    <div id="missions" class="section">
+      <h2 class="text-2xl mb-2">Missions</h2>
+      <textarea id="mission-input" rows="4" placeholder="Seul l'admin peut écrire ici..." disabled></textarea>
+      <button id="submit-mission" class="mt-2 bg-green-600 text-black px-4 py-2 rounded hover:bg-green-500" disabled>Soumettre</button>
+      <div id="missions-output" class="output"></div>
+    </div>
+    <div id="projects" class="section">
+      <h2 class="text-2xl mb-2">Projets</h2>
+      <input id="project-name" type="text" placeholder="Nom du projet...">
+      <textarea id="project-description" rows="4" placeholder="Description du projet..."></textarea>
+      <button id="submit-project" class="mt-2 bg-green-600 text-black px-4 py-2 rounded hover:bg-green-500">Soumettre</button>
+      <div id="projects-output" class="output"></div>
+    </div>
+  </div>
+
+  <script>
+    const output = document.getElementById('output');
+    const input = document.getElementById('input');
+    const terminal = document.getElementById('terminal');
+    const mainPage = document.getElementById('main-page');
+    const usernameDisplay = document.getElementById('username-display');
+    const logoutButton = document.getElementById('logout');
+    const reportsBtn = document.getElementById('reports-btn');
+    const discussionsBtn = document.getElementById('discussions-btn');
+    const missionsBtn = document.getElementById('missions-btn');
+    const projectsBtn = document.getElementById('projects-btn');
+    const reportsSection = document.getElementById('reports');
+    const discussionsSection = document.getElementById('discussions');
+    const missionsSection = document.getElementById('missions');
+    const projectsSection = document.getElementById('projects');
+    const reportInput = document.getElementById('report-input');
+    const discussionInput = document.getElementById('discussion-input');
+    const missionInput = document.getElementById('mission-input');
+    const projectName = document.getElementById('project-name');
+    const projectDescription = document.getElementById('project-description');
+    const submitReport = document.getElementById('submit-report');
+    const submitDiscussion = document.getElementById('submit-discussion');
+    const submitMission = document.getElementById('submit-mission');
+    const submitProject = document.getElementById('submit-project');
+    const reportsOutput = document.getElementById('reports-output');
+    const discussionsOutput = document.getElementById('discussions-output');
+    const missionsOutput = document.getElementById('missions-output');
+    const projectsOutput = document.getElementById('projects-output');
+
+    const users = {
+      'admin': 'password123',
+      'user': 'pass456'
+    };
+
+    // Charger les données depuis localStorage
+    function loadData() {
+      const reports = JSON.parse(localStorage.getItem('reports') || '[]');
+      const discussions = JSON.parse(localStorage.getItem('discussions') || '[]');
+      const missions = JSON.parse(localStorage.getItem('missions') || '[]');
+      const projects = JSON.parse(localStorage.getItem('projects') || '[]');
+
+      reports.forEach(item => {
+        const report = document.createElement('div');
+        report.textContent = `[${item.user}] ${item.content} (${new Date(item.timestamp).toLocaleString()})`;
+        report.classList.add('report');
+        report.addEventListener('click', () => {
+          const reportWindow = window.open('', '_blank', 'width=800,height=600');
+          reportWindow.document.write(`
+            <html>
+              <head>
+                <title>Rapport</title>
+                <style>
+                  body {
+                    background-color: #1a1a1a;
+                    color: #00ff00;
+                    font-family: 'Courier New', Courier, monospace;
+                    padding: 20px;
+                    margin: 0;
+                  }
+                  .container {
+                    max-width: 600px;
+                    margin: 0 auto;
+                  }
+                  h1 {
+                    font-size: 24px;
+                    margin-bottom: 20px;
+                  }
+                  p {
+                    white-space: pre-wrap;
+                    word-wrap: break-word;
+                    background-color: #000;
+                    border: 2px solid #00ff00;
+                    padding: 10px;
+                  }
+                </style>
+              </head>
+              <body>
+                <div class="container">
+                  <h1>Rapport de ${item.user}</h1>
+                  <p class="report-content">${item.content}</p>
+                  <p><small>${new Date(item.timestamp).toLocaleString()}</small></p>
+                </div>
+              </body>
+            </html>
+          `);
+          reportWindow.document.close();
+        });
+        reportsOutput.appendChild(report);
+      });
+
+      discussions.forEach(item => {
+        const message = document.createElement('div');
+        message.textContent = `[${item.user}] ${item.content} (${new Date(item.timestamp).toLocaleString()})`;
+        discussionsOutput.appendChild(message);
+      });
+
+      missions.forEach(item => {
+        const mission = document.createElement('div');
+        mission.textContent = `[${item.user}] ${item.content} (${new Date(item.timestamp).toLocaleString()})`;
+        missionsOutput.appendChild(mission);
+      });
+
+      projects.forEach(item => {
+        const project = document.createElement('div');
+        project.textContent = `[${item.user}] ${item.name} (${new Date(item.timestamp).toLocaleString()})`;
+        project.classList.add('project');
+        project.addEventListener('click', () => {
+          const projectWindow = window.open('', '_blank', 'width=800,height=600');
+          projectWindow.document.write(`
+            <html>
+              <head>
+                <title>Projet</title>
+                <style>
+                  body {
+                    background-color: #1a1a1a;
+                    color: #00ff00;
+                    font-family: 'Courier New', Courier, monospace;
+                    padding: 20px;
+                    margin: 0;
+                  }
+                  .container {
+                    max-width: 600px;
+                    margin: 0 auto;
+                  }
+                  h1 {
+                    font-size: 24px;
+                    margin-bottom: 20px;
+                  }
+                  p {
+                    white-space: pre-wrap;
+                    word-wrap: break-word;
+                    background-color: #000;
+                    border: 2px solid #00ff00;
+                    padding: 10px;
+                  }
+                </style>
+              </head>
+              <body>
+                <div class="container">
+                  <h1>Projet de ${item.user}: ${item.name}</h1>
+                  <p class="report-content">${item.description}</p>
+                  <p><small>${new Date(item.timestamp).toLocaleString()}</small></p>
+                </div>
+              </body>
+            </html>
+          `);
+          projectWindow.document.close();
+        });
+        projectsOutput.appendChild(project);
+      });
+
+      reportsOutput.scrollTop = reportsOutput.scrollHeight;
+      discussionsOutput.scrollTop = discussionsOutput.scrollHeight;
+      missionsOutput.scrollTop = missionsOutput.scrollHeight;
+      projectsOutput.scrollTop = projectsOutput.scrollHeight;
+    }
+
+    // Sauvegarder les données dans localStorage
+    function saveData(type, user, name, description) {
+      const key = type + 's'; // reports, discussions, missions, projects
+      const data = JSON.parse(localStorage.getItem(key) || '[]');
+      data.push({ user, name, description, timestamp: new Date().toISOString() });
+      localStorage.setItem(key, JSON.stringify(data));
+    }
+
+    function printOutput(text) {
+      const line = document.createElement('div');
+      line.textContent = text;
+      output.appendChild(line);
+      output.scrollTop = output.scrollHeight;
+    }
+
+    function clearInput() {
+      input.value = '';
+    }
+
+    function showSection(section) {
+      [reportsSection, discussionsSection, missionsSection, projectsSection].forEach(s => s.classList.remove('active'));
+      section.classList.add('active');
+    }
+
+    let currentUser = null;
+    let awaitingPassword = false;
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && input.value.trim() !== '') {
+        const command = input.value.trim();
+        
+        if (!awaitingPassword) {
+          if (command.startsWith('login ')) {
+            const username = command.split(' ')[1];
+            if (users[username]) {
+              currentUser = username;
+              awaitingPassword = true;
+              printOutput(`> login ${username}`);
+              printOutput('Entrez le mot de passe:');
+            } else {
+              printOutput(`> login ${username}`);
+              printOutput('Erreur: Utilisateur inconnu');
+            }
+          } else {
+            printOutput(`> ${command}`);
+            printOutput('Commande inconnue. Utilisez "login <username>"');
+          }
+        } else {
+          if (users[currentUser] === command) {
+            printOutput('Mot de passe correct. Connexion réussie.');
+            usernameDisplay.textContent = currentUser;
+            if (currentUser === 'admin') {
+              missionInput.disabled = false;
+              submitMission.disabled = false;
+            }
+            setTimeout(() => {
+              terminal.style.display = 'none';
+              mainPage.style.display = 'flex';
+              showSection(reportsSection);
+              loadData(); // Charger les données à la connexion
+            }, 1000);
+          } else {
+            printOutput('Mot de passe incorrect.');
+            awaitingPassword = false;
+            currentUser = null;
+          }
+        }
+        clearInput();
+      }
+    });
+
+    reportsBtn.addEventListener('click', () => showSection(reportsSection));
+    discussionsBtn.addEventListener('click', () => showSection(discussionsSection));
+    missionsBtn.addEventListener('click', () => showSection(missionsSection));
+    projectsBtn.addEventListener('click', () => showSection(projectsSection));
+
+    submitReport.addEventListener('click', () => {
+      if (reportInput.value.trim() !== '') {
+        const content = reportInput.value;
+        const report = document.createElement('div');
+        report.textContent = `[${currentUser}] ${content} (${new Date().toLocaleString()})`;
+        report.classList.add('report');
+        report.addEventListener('click', () => {
+          const reportWindow = window.open('', '_blank', 'width=800,height=600');
+          reportWindow.document.write(`
+            <html>
+              <head>
+                <title>Rapport</title>
+                <style>
+                  body {
+                    background-color: #1a1a1a;
+                    color: #00ff00;
+                    font-family: 'Courier New', Courier, monospace;
+                    padding: 20px;
+                    margin: 0;
+                  }
+                  .container {
+                    max-width: 600px;
+                    margin: 0 auto;
+                  }
+                  h1 {
+                    font-size: 24px;
+                    margin-bottom: 20px;
+                  }
+                  p {
+                    white-space: pre-wrap;
+                    word-wrap: break-word;
+                    background-color: #000;
+                    border: 2px solid #00ff00;
+                    padding: 10px;
+                  }
+                </style>
+              </head>
+              <body>
+                <div class="container">
+                  <h1>Rapport de ${currentUser}</h1>
+                  <p class="report-content">${content}</p>
+                  <p><small>${new Date().toLocaleString()}</small></p>
+                </div>
+              </body>
+            </html>
+          `);
+          reportWindow.document.close();
+        });
+        reportsOutput.appendChild(report);
+        reportsOutput.scrollTop = reportsOutput.scrollHeight;
+        saveData('report', currentUser, content);
+        reportInput.value = '';
+      }
+    });
+
+    submitDiscussion.addEventListener('click', () => {
+      if (discussionInput.value.trim() !== '') {
+        const content = discussionInput.value;
+        const message = document.createElement('div');
+        message.textContent = `[${currentUser}] ${content} (${new Date().toLocaleString()})`;
+        discussionsOutput.appendChild(message);
+        discussionsOutput.scrollTop = discussionsOutput.scrollHeight;
+        saveData('discussion', currentUser, content);
+        discussionInput.value = '';
+      }
+    });
+
+    submitMission.addEventListener('click', () => {
+      if (currentUser === 'admin' && missionInput.value.trim() !== '') {
+        const content = missionInput.value;
+        const mission = document.createElement('div');
+        mission.textContent = `[${currentUser}] ${content} (${new Date().toLocaleString()})`;
+        missionsOutput.appendChild(mission);
+        missionsOutput.scrollTop = missionsOutput.scrollHeight;
+        saveData('mission', currentUser, content);
+        missionInput.value = '';
+      }
+    });
+
+    submitProject.addEventListener('click', () => {
+      if (projectName.value.trim() !== '' && projectDescription.value.trim() !== '') {
+        const name = projectName.value;
+        const description = projectDescription.value;
+        const project = document.createElement('div');
+        project.textContent = `[${currentUser}] ${name} (${new Date().toLocaleString()})`;
+        project.classList.add('project');
+        project.addEventListener('click', () => {
+          const projectWindow = window.open('', '_blank', 'width=800,height=600');
+          projectWindow.document.write(`
+            <html>
+              <head>
+                <title>Projet</title>
+                <style>
+                  body {
+                    background-color: #1a1a1a;
+                    color: #00ff00;
+                    font-family: 'Courier New', Courier, monospace;
+                    padding: 20px;
+                    margin: 0;
+                  }
+                  .container {
+                    max-width: 600px;
+                    margin: 0 auto;
+                  }
+                  h1 {
+                    font-size: 24px;
+                    margin-bottom: 20px;
+                  }
+                  p {
+                    white-space: pre-wrap;
+                    word-wrap: break-word;
+                    background-color: #000;
+                    border: 2px solid #00ff00;
+                    padding: 10px;
+                  }
+                </style>
+              </head>
+              <body>
+                <div class="container">
+                  <h1>Projet de ${currentUser}: ${name}</h1>
+                  <p class="report-content">${description}</p>
+                  <p><small>${new Date().toLocaleString()}</small></p>
+                </div>
+              </body>
+            </html>
+          `);
+          projectWindow.document.close();
+        });
+        projectsOutput.appendChild(project);
+        projectsOutput.scrollTop = projectsOutput.scrollHeight;
+        saveData('project', currentUser, name, description);
+        projectName.value = '';
+        projectDescription.value = '';
+      }
+    });
+
+    logoutButton.addEventListener('click', () => {
+      mainPage.style.display = 'none';
+      terminal.style.display = 'flex';
+      output.innerHTML = '';
+      currentUser = null;
+      awaitingPassword = false;
+      missionInput.disabled = true;
+      submitMission.disabled = true;
+      reportsOutput.innerHTML = '';
+      discussionsOutput.innerHTML = '';
+      missionsOutput.innerHTML = '';
+      projectsOutput.innerHTML = '';
+      printOutput('Déconnexion réussie. Entrez une commande:');
+      loadData(); // Recharger pour afficher les données persistantes
+    });
+
+    printOutput('Bienvenue sur le système. Entrez "login <username>" pour vous connecter.');
+  </script>
+</body>
+</html>

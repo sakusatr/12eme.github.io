@@ -1,0 +1,19 @@
+{
+  "reports": [
+    {
+      "user": "admin",
+      "content": "Rapport initial sur le serveur.",
+      "timestamp": "2025-07-23T17:00:00Z"
+    }
+  ],
+  "projects": [
+    {
+      "user": "user",
+      "name": "Projet Test",
+      "description": "Description initiale du projet.",
+      "timestamp": "2025-07-23T17:00:00Z"
+    }
+  ],
+  "discussions": [],
+  "missions": []
+}
