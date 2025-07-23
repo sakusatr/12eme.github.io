@@ -165,135 +165,145 @@
       'user': 'pass456'
     };
 
-    // Charger les données depuis localStorage
-    function loadData() {
-      const reports = JSON.parse(localStorage.getItem('reports') || '[]');
-      const discussions = JSON.parse(localStorage.getItem('discussions') || '[]');
-      const missions = JSON.parse(localStorage.getItem('missions') || '[]');
-      const projects = JSON.parse(localStorage.getItem('projects') || '[]');
+    // Charger les données depuis data.json
+    async function loadData() {
+      try {
+        const response = await fetch('data.json');
+        const data = await response.json();
+        reportsOutput.innerHTML = '';
+        projectsOutput.innerHTML = '';
+        discussionsOutput.innerHTML = '';
+        missionsOutput.innerHTML = '';
 
-      reports.forEach(item => {
-        const report = document.createElement('div');
-        report.textContent = `[${item.user}] ${item.content} (${new Date(item.timestamp).toLocaleString()})`;
-        report.classList.add('report');
-        report.addEventListener('click', () => {
-          const reportWindow = window.open('', '_blank', 'width=800,height=600');
-          reportWindow.document.write(`
-            <html>
-              <head>
-                <title>Rapport</title>
-                <style>
-                  body {
-                    background-color: #1a1a1a;
-                    color: #00ff00;
-                    font-family: 'Courier New', Courier, monospace;
-                    padding: 20px;
-                    margin: 0;
-                  }
-                  .container {
-                    max-width: 600px;
-                    margin: 0 auto;
-                  }
-                  h1 {
-                    font-size: 24px;
-                    margin-bottom: 20px;
-                  }
-                  p {
-                    white-space: pre-wrap;
-                    word-wrap: break-word;
-                    background-color: #000;
-                    border: 2px solid #00ff00;
-                    padding: 10px;
-                  }
-                </style>
-              </head>
-              <body>
-                <div class="container">
-                  <h1>Rapport de ${item.user}</h1>
-                  <p class="report-content">${item.content}</p>
-                  <p><small>${new Date(item.timestamp).toLocaleString()}</small></p>
-                </div>
-              </body>
-            </html>
-          `);
-          reportWindow.document.close();
+        data.reports.forEach(item => {
+          const report = document.createElement('div');
+          report.textContent = `[${item.user}] ${item.content} (${new Date(item.timestamp).toLocaleString()})`;
+          report.classList.add('report');
+          report.addEventListener('click', () => {
+            const reportWindow = window.open('', '_blank', 'width=800,height=600');
+            reportWindow.document.write(`
+              <html>
+                <head>
+                  <title>Rapport</title>
+                  <style>
+                    body {
+                      background-color: #1a1a1a;
+                      color: #00ff00;
+                      font-family: 'Courier New', Courier, monospace;
+                      padding: 20px;
+                      margin: 0;
+                    }
+                    .container {
+                      max-width: 600px;
+                      margin: 0 auto;
+                    }
+                    h1 {
+                      font-size: 24px;
+                      margin-bottom: 20px;
+                    }
+                    p {
+                      white-space: pre-wrap;
+                      word-wrap: break-word;
+                      background-color: #000;
+                      border: 2px solid #00ff00;
+                      padding: 10px;
+                    }
+                  </style>
+                </head>
+                <body>
+                  <div class="container">
+                    <h1>Rapport de ${item.user}</h1>
+                    <p class="report-content">${item.content}</p>
+                    <p><small>${new Date(item.timestamp).toLocaleString()}</small></p>
+                  </div>
+                </body>
+              </html>
+            `);
+            reportWindow.document.close();
+          });
+          reportsOutput.appendChild(report);
         });
-        reportsOutput.appendChild(report);
-      });
 
-      discussions.forEach(item => {
-        const message = document.createElement('div');
-        message.textContent = `[${item.user}] ${item.content} (${new Date(item.timestamp).toLocaleString()})`;
-        discussionsOutput.appendChild(message);
-      });
-
-      missions.forEach(item => {
-        const mission = document.createElement('div');
-        mission.textContent = `[${item.user}] ${item.content} (${new Date(item.timestamp).toLocaleString()})`;
-        missionsOutput.appendChild(mission);
-      });
-
-      projects.forEach(item => {
-        const project = document.createElement('div');
-        project.textContent = `[${item.user}] ${item.name} (${new Date(item.timestamp).toLocaleString()})`;
-        project.classList.add('project');
-        project.addEventListener('click', () => {
-          const projectWindow = window.open('', '_blank', 'width=800,height=600');
-          projectWindow.document.write(`
-            <html>
-              <head>
-                <title>Projet</title>
-                <style>
-                  body {
-                    background-color: #1a1a1a;
-                    color: #00ff00;
-                    font-family: 'Courier New', Courier, monospace;
-                    padding: 20px;
-                    margin: 0;
-                  }
-                  .container {
-                    max-width: 600px;
-                    margin: 0 auto;
-                  }
-                  h1 {
-                    font-size: 24px;
-                    margin-bottom: 20px;
-                  }
-                  p {
-                    white-space: pre-wrap;
-                    word-wrap: break-word;
-                    background-color: #000;
-                    border: 2px solid #00ff00;
-                    padding: 10px;
-                  }
-                </style>
-              </head>
-              <body>
-                <div class="container">
-                  <h1>Projet de ${item.user}: ${item.name}</h1>
-                  <p class="report-content">${item.description}</p>
-                  <p><small>${new Date(item.timestamp).toLocaleString()}</small></p>
-                </div>
-              </body>
-            </html>
-          `);
-          projectWindow.document.close();
+        data.projects.forEach(item => {
+          const project = document.createElement('div');
+          project.textContent = `[${item.user}] ${item.name} (${new Date(item.timestamp).toLocaleString()})`;
+          project.classList.add('project');
+          project.addEventListener('click', () => {
+            const projectWindow = window.open('', '_blank', 'width=800,height=600');
+            projectWindow.document.write(`
+              <html>
+                <head>
+                  <title>Projet</title>
+                  <style>
+                    body {
+                      background-color: #1a1a1a;
+                      color: #00ff00;
+                      font-family: 'Courier New', Courier, monospace;
+                      padding: 20px;
+                      margin: 0;
+                    }
+                    .container {
+                      max-width: 600px;
+                      margin: 0 auto;
+                    }
+                    h1 {
+                      font-size: 24px;
+                      margin-bottom: 20px;
+                    }
+                    p {
+                      white-space: pre-wrap;
+                      word-wrap: break-word;
+                      background-color: #000;
+                      border: 2px solid #00ff00;
+                      padding: 10px;
+                    }
+                  </style>
+                </head>
+                <body>
+                  <div class="container">
+                    <h1>Projet de ${item.user}: ${item.name}</h1>
+                    <p class="report-content">${item.description}</p>
+                    <p><small>${new Date(item.timestamp).toLocaleString()}</small></p>
+                  </div>
+                </body>
+              </html>
+            `);
+            projectWindow.document.close();
+          });
+          projectsOutput.appendChild(project);
         });
-        projectsOutput.appendChild(project);
-      });
 
-      reportsOutput.scrollTop = reportsOutput.scrollHeight;
-      discussionsOutput.scrollTop = discussionsOutput.scrollHeight;
-      missionsOutput.scrollTop = missionsOutput.scrollHeight;
-      projectsOutput.scrollTop = projectsOutput.scrollHeight;
+        data.discussions.forEach(item => {
+          const message = document.createElement('div');
+          message.textContent = `[${item.user}] ${item.content} (${new Date(item.timestamp).toLocaleString()})`;
+          discussionsOutput.appendChild(message);
+        });
+
+        data.missions.forEach(item => {
+          const mission = document.createElement('div');
+          mission.textContent = `[${item.user}] ${item.content} (${new Date(item.timestamp).toLocaleString()})`;
+          missionsOutput.appendChild(mission);
+        });
+
+        reportsOutput.scrollTop = reportsOutput.scrollHeight;
+        projectsOutput.scrollTop = projectsOutput.scrollHeight;
+        discussionsOutput.scrollTop = discussionsOutput.scrollHeight;
+        missionsOutput.scrollTop = missionsOutput.scrollHeight;
+      } catch (error) {
+        console.error('Erreur lors du chargement des données:', error);
+      }
     }
 
-    // Sauvegarder les données dans localStorage
+    // Sauvegarder temporairement dans localStorage (à synchroniser manuellement plus tard)
     function saveData(type, user, name, description) {
-      const key = type + 's'; // reports, discussions, missions, projects
-      const data = JSON.parse(localStorage.getItem(key) || '[]');
-      data.push({ user, name, description, timestamp: new Date().toISOString() });
-      localStorage.setItem(key, JSON.stringify(data));
+      const data = JSON.parse(localStorage.getItem('data') || '{"reports": [], "projects": [], "discussions": [], "missions": []}');
+      const newEntry = { user, timestamp: new Date().toISOString() };
+      if (type === 'report') newEntry.content = name;
+      if (type === 'project') { newEntry.name = name; newEntry.description = description; }
+      if (type === 'discussion' || type === 'mission') newEntry.content = name;
+      data[type + 's'].push(newEntry);
+      localStorage.setItem('data', JSON.stringify(data));
+      // Note: Synchronisation manuelle avec data.json requise ici (via API GitHub ou manuel)
     }
 
     function printOutput(text) {
@@ -347,7 +357,7 @@
               terminal.style.display = 'none';
               mainPage.style.display = 'flex';
               showSection(reportsSection);
-              loadData(); // Charger les données à la connexion
+              loadData();
             }, 1000);
           } else {
             printOutput('Mot de passe incorrect.');
@@ -513,7 +523,7 @@
       missionsOutput.innerHTML = '';
       projectsOutput.innerHTML = '';
       printOutput('Déconnexion réussie. Entrez une commande:');
-      loadData(); // Recharger pour afficher les données persistantes
+      loadData();
     });
 
     printOutput('Bienvenue sur le système. Entrez "login <username>" pour vous connecter.');
