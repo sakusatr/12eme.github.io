@@ -165,10 +165,10 @@
       'user': 'pass456'
     };
 
-    // Charger les données depuis data.json
+    // Charger les données depuis le serveur
     async function loadData() {
       try {
-        const response = await fetch('data.json');
+        const response = await fetch('http://localhost:3000/data');
         const data = await response.json();
         reportsOutput.innerHTML = '';
         projectsOutput.innerHTML = '';
@@ -291,19 +291,28 @@
         missionsOutput.scrollTop = missionsOutput.scrollHeight;
       } catch (error) {
         console.error('Erreur lors du chargement des données:', error);
+        printOutput('Erreur: Impossible de charger les données du serveur.');
       }
     }
 
-    // Sauvegarder temporairement dans localStorage (à synchroniser manuellement plus tard)
-    function saveData(type, user, name, description) {
-      const data = JSON.parse(localStorage.getItem('data') || '{"reports": [], "projects": [], "discussions": [], "missions": []}');
-      const newEntry = { user, timestamp: new Date().toISOString() };
-      if (type === 'report') newEntry.content = name;
-      if (type === 'project') { newEntry.name = name; newEntry.description = description; }
-      if (type === 'discussion' || type === 'mission') newEntry.content = name;
-      data[type + 's'].push(newEntry);
-      localStorage.setItem('data', JSON.stringify(data));
-      // Note: Synchronisation manuelle avec data.json requise ici (via API GitHub ou manuel)
+    // Sauvegarder les données via l'API
+    async function saveData(type, user, name, description) {
+      try {
+        const newEntry = { user, timestamp: new Date().toISOString() };
+        if (type === 'report') newEntry.content = name;
+        if (type === 'project') { newEntry.name = name; newEntry.description = description; }
+        if (type === 'discussion' || type === 'mission') newEntry.content = name;
+
+        await fetch(`http://localhost:3000/${type}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newEntry)
+        });
+        await loadData(); // Recharger les données après sauvegarde
+      } catch (error) {
+        console.error('Erreur lors de la sauvegarde des données:', error);
+        printOutput('Erreur: Impossible de sauvegarder les données.');
+      }
     }
 
     function printOutput(text) {
@@ -374,7 +383,7 @@
     missionsBtn.addEventListener('click', () => showSection(missionsSection));
     projectsBtn.addEventListener('click', () => showSection(projectsSection));
 
-    submitReport.addEventListener('click', () => {
+    submitReport.addEventListener('click', async () => {
       if (reportInput.value.trim() !== '') {
         const content = reportInput.value;
         const report = document.createElement('div');
@@ -424,36 +433,36 @@
         });
         reportsOutput.appendChild(report);
         reportsOutput.scrollTop = reportsOutput.scrollHeight;
-        saveData('report', currentUser, content);
+        await saveData('report', currentUser, content);
         reportInput.value = '';
       }
     });
 
-    submitDiscussion.addEventListener('click', () => {
+    submitDiscussion.addEventListener('click', async () => {
       if (discussionInput.value.trim() !== '') {
         const content = discussionInput.value;
         const message = document.createElement('div');
         message.textContent = `[${currentUser}] ${content} (${new Date().toLocaleString()})`;
         discussionsOutput.appendChild(message);
         discussionsOutput.scrollTop = discussionsOutput.scrollHeight;
-        saveData('discussion', currentUser, content);
+        await saveData('discussion', currentUser, content);
         discussionInput.value = '';
       }
     });
 
-    submitMission.addEventListener('click', () => {
+    submitMission.addEventListener('click', async () => {
       if (currentUser === 'admin' && missionInput.value.trim() !== '') {
         const content = missionInput.value;
         const mission = document.createElement('div');
         mission.textContent = `[${currentUser}] ${content} (${new Date().toLocaleString()})`;
         missionsOutput.appendChild(mission);
         missionsOutput.scrollTop = missionsOutput.scrollHeight;
-        saveData('mission', currentUser, content);
+        await saveData('mission', currentUser, content);
         missionInput.value = '';
       }
     });
 
-    submitProject.addEventListener('click', () => {
+    submitProject.addEventListener('click', async () => {
       if (projectName.value.trim() !== '' && projectDescription.value.trim() !== '') {
         const name = projectName.value;
         const description = projectDescription.value;
@@ -504,7 +513,7 @@
         });
         projectsOutput.appendChild(project);
         projectsOutput.scrollTop = projectsOutput.scrollHeight;
-        saveData('project', currentUser, name, description);
+        await saveData('project', currentUser, name, description);
         projectName.value = '';
         projectDescription.value = '';
       }
