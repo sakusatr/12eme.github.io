@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Terminal Login</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
   <style>
     body {
       background-color: #1a1a1a;
@@ -133,168 +132,178 @@
   </div>
 
   <script>
-    let db;
+    const output = document.getElementById('output');
+    const input = document.getElementById('input');
+    const terminal = document.getElementById('terminal');
+    const mainPage = document.getElementById('main-page');
+    const usernameDisplay = document.getElementById('username-display');
+    const logoutButton = document.getElementById('logout');
+    const reportsBtn = document.getElementById('reports-btn');
+    const discussionsBtn = document.getElementById('discussions-btn');
+    const missionsBtn = document.getElementById('missions-btn');
+    const projectsBtn = document.getElementById('projects-btn');
+    const reportsSection = document.getElementById('reports');
+    const discussionsSection = document.getElementById('discussions');
+    const missionsSection = document.getElementById('missions');
+    const projectsSection = document.getElementById('projects');
+    const reportInput = document.getElementById('report-input');
+    const discussionInput = document.getElementById('discussion-input');
+    const missionInput = document.getElementById('mission-input');
+    const projectName = document.getElementById('project-name');
+    const projectDescription = document.getElementById('project-description');
+    const submitReport = document.getElementById('submit-report');
+    const submitDiscussion = document.getElementById('submit-discussion');
+    const submitMission = document.getElementById('submit-mission');
+    const submitProject = document.getElementById('submit-project');
+    const reportsOutput = document.getElementById('reports-output');
+    const discussionsOutput = document.getElementById('discussions-output');
+    const missionsOutput = document.getElementById('missions-output');
+    const projectsOutput = document.getElementById('projects-output');
 
-    // Initialiser la base de données SQLite
-    async function initDB() {
+    const users = {
+      'admin': 'password123',
+      'user': 'pass456'
+    };
+
+    // Charger les données depuis data.json
+    async function loadData() {
       try {
-        const sqlResponse = await initSqlJs({ locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${file}` });
-        const dbResponse = await fetch('database.db');
-        const buffer = await dbResponse.arrayBuffer();
-        db = new sqlResponse.Database(new Uint8Array(buffer));
+        const response = await fetch('data.json');
+        const data = await response.json();
+        reportsOutput.innerHTML = '';
+        projectsOutput.innerHTML = '';
+        discussionsOutput.innerHTML = '';
+        missionsOutput.innerHTML = '';
+
+        data.reports.forEach(item => {
+          const report = document.createElement('div');
+          report.textContent = `[${item.user}] ${item.content} (${new Date(item.timestamp).toLocaleString()})`;
+          report.classList.add('report');
+          report.addEventListener('click', () => {
+            const reportWindow = window.open('', '_blank', 'width=800,height=600');
+            reportWindow.document.write(`
+              <html>
+                <head>
+                  <title>Rapport</title>
+                  <style>
+                    body {
+                      background-color: #1a1a1a;
+                      color: #00ff00;
+                      font-family: 'Courier New', Courier, monospace;
+                      padding: 20px;
+                      margin: 0;
+                    }
+                    .container {
+                      max-width: 600px;
+                      margin: 0 auto;
+                    }
+                    h1 {
+                      font-size: 24px;
+                      margin-bottom: 20px;
+                    }
+                    p {
+                      white-space: pre-wrap;
+                      word-wrap: break-word;
+                      background-color: #000;
+                      border: 2px solid #00ff00;
+                      padding: 10px;
+                    }
+                  </style>
+                </head>
+                <body>
+                  <div class="container">
+                    <h1>Rapport de ${item.user}</h1>
+                    <p class="report-content">${item.content}</p>
+                    <p><small>${new Date(item.timestamp).toLocaleString()}</small></p>
+                  </div>
+                </body>
+              </html>
+            `);
+            reportWindow.document.close();
+          });
+          reportsOutput.appendChild(report);
+        });
+
+        data.projects.forEach(item => {
+          const project = document.createElement('div');
+          project.textContent = `[${item.user}] ${item.name} (${new Date(item.timestamp).toLocaleString()})`;
+          project.classList.add('project');
+          project.addEventListener('click', () => {
+            const projectWindow = window.open('', '_blank', 'width=800,height=600');
+            projectWindow.document.write(`
+              <html>
+                <head>
+                  <title>Projet</title>
+                  <style>
+                    body {
+                      background-color: #1a1a1a;
+                      color: #00ff00;
+                      font-family: 'Courier New', Courier, monospace;
+                      padding: 20px;
+                      margin: 0;
+                    }
+                    .container {
+                      max-width: 600px;
+                      margin: 0 auto;
+                    }
+                    h1 {
+                      font-size: 24px;
+                      margin-bottom: 20px;
+                    }
+                    p {
+                      white-space: pre-wrap;
+                      word-wrap: break-word;
+                      background-color: #000;
+                      border: 2px solid #00ff00;
+                      padding: 10px;
+                    }
+                  </style>
+                </head>
+                <body>
+                  <div class="container">
+                    <h1>Projet de ${item.user}: ${item.name}</h1>
+                    <p class="report-content">${item.description}</p>
+                    <p><small>${new Date(item.timestamp).toLocaleString()}</small></p>
+                  </div>
+                </body>
+              </html>
+            `);
+            projectWindow.document.close();
+          });
+          projectsOutput.appendChild(project);
+        });
+
+        data.discussions.forEach(item => {
+          const message = document.createElement('div');
+          message.textContent = `[${item.user}] ${item.content} (${new Date(item.timestamp).toLocaleString()})`;
+          discussionsOutput.appendChild(message);
+        });
+
+        data.missions.forEach(item => {
+          const mission = document.createElement('div');
+          mission.textContent = `[${item.user}] ${item.content} (${new Date(item.timestamp).toLocaleString()})`;
+          missionsOutput.appendChild(mission);
+        });
+
+        reportsOutput.scrollTop = reportsOutput.scrollHeight;
+        projectsOutput.scrollTop = projectsOutput.scrollHeight;
+        discussionsOutput.scrollTop = discussionsOutput.scrollHeight;
+        missionsOutput.scrollTop = missionsOutput.scrollHeight;
       } catch (error) {
-        console.error('Erreur lors de l\'initialisation de la base:', error);
+        console.error('Erreur lors du chargement des données:', error);
       }
     }
 
-    // Charger les données depuis la base
-    function loadData() {
-      if (!db) return;
-
-      reportsOutput.innerHTML = '';
-      projectsOutput.innerHTML = '';
-      discussionsOutput.innerHTML = '';
-      missionsOutput.innerHTML = '';
-
-      // Rapports
-      const reportsStmt = db.prepare("SELECT * FROM reports ORDER BY timestamp DESC");
-      while (reportsStmt.step()) {
-        const row = reportsStmt.getAsObject();
-        const report = document.createElement('div');
-        report.textContent = `[${row.user}] ${row.content} (${new Date(row.timestamp).toLocaleString()})`;
-        report.classList.add('report');
-        report.addEventListener('click', () => {
-          const reportWindow = window.open('', '_blank', 'width=800,height=600');
-          reportWindow.document.write(`
-            <html>
-              <head>
-                <title>Rapport</title>
-                <style>
-                  body {
-                    background-color: #1a1a1a;
-                    color: #00ff00;
-                    font-family: 'Courier New', Courier, monospace;
-                    padding: 20px;
-                    margin: 0;
-                  }
-                  .container {
-                    max-width: 600px;
-                    margin: 0 auto;
-                  }
-                  h1 {
-                    font-size: 24px;
-                    margin-bottom: 20px;
-                  }
-                  p {
-                    white-space: pre-wrap;
-                    word-wrap: break-word;
-                    background-color: #000;
-                    border: 2px solid #00ff00;
-                    padding: 10px;
-                  }
-                </style>
-              </head>
-              <body>
-                <div class="container">
-                  <h1>Rapport de ${row.user}</h1>
-                  <p class="report-content">${row.content}</p>
-                  <p><small>${new Date(row.timestamp).toLocaleString()}</small></p>
-                </div>
-              </body>
-            </html>
-          `);
-          reportWindow.document.close();
-        });
-        reportsOutput.appendChild(report);
-      }
-      reportsStmt.free();
-
-      // Projets
-      const projectsStmt = db.prepare("SELECT * FROM projects ORDER BY timestamp DESC");
-      while (projectsStmt.step()) {
-        const row = projectsStmt.getAsObject();
-        const project = document.createElement('div');
-        project.textContent = `[${row.user}] ${row.name} (${new Date(row.timestamp).toLocaleString()})`;
-        project.classList.add('project');
-        project.addEventListener('click', () => {
-          const projectWindow = window.open('', '_blank', 'width=800,height=600');
-          projectWindow.document.write(`
-            <html>
-              <head>
-                <title>Projet</title>
-                <style>
-                  body {
-                    background-color: #1a1a1a;
-                    color: #00ff00;
-                    font-family: 'Courier New', Courier, monospace;
-                    padding: 20px;
-                    margin: 0;
-                  }
-                  .container {
-                    max-width: 600px;
-                    margin: 0 auto;
-                  }
-                  h1 {
-                    font-size: 24px;
-                    margin-bottom: 20px;
-                  }
-                  p {
-                    white-space: pre-wrap;
-                    word-wrap: break-word;
-                    background-color: #000;
-                    border: 2px solid #00ff00;
-                    padding: 10px;
-                  }
-                </style>
-              </head>
-              <body>
-                <div class="container">
-                  <h1>Projet de ${row.user}: ${row.name}</h1>
-                  <p class="report-content">${row.description}</p>
-                  <p><small>${new Date(row.timestamp).toLocaleString()}</small></p>
-                </div>
-              </body>
-            </html>
-          `);
-          projectWindow.document.close();
-        });
-        projectsOutput.appendChild(project);
-      }
-      projectsStmt.free();
-
-      // Discussions
-      const discussionsStmt = db.prepare("SELECT * FROM discussions ORDER BY timestamp DESC");
-      while (discussionsStmt.step()) {
-        const row = discussionsStmt.getAsObject();
-        const message = document.createElement('div');
-        message.textContent = `[${row.user}] ${row.content} (${new Date(row.timestamp).toLocaleString()})`;
-        discussionsOutput.appendChild(message);
-      }
-      discussionsStmt.free();
-
-      // Missions
-      const missionsStmt = db.prepare("SELECT * FROM missions ORDER BY timestamp DESC");
-      while (missionsStmt.step()) {
-        const row = missionsStmt.getAsObject();
-        const mission = document.createElement('div');
-        mission.textContent = `[${row.user}] ${row.content} (${new Date(row.timestamp).toLocaleString()})`;
-        missionsOutput.appendChild(mission);
-      }
-      missionsStmt.free();
-
-      reportsOutput.scrollTop = reportsOutput.scrollHeight;
-      projectsOutput.scrollTop = projectsOutput.scrollHeight;
-      discussionsOutput.scrollTop = discussionsOutput.scrollHeight;
-      missionsOutput.scrollTop = missionsOutput.scrollHeight;
-    }
-
-    // Sauvegarder dans la base en mémoire
+    // Sauvegarder temporairement dans localStorage (à synchroniser manuellement plus tard)
     function saveData(type, user, name, description) {
-      if (!db) return;
-      const stmt = db.prepare(`INSERT INTO ${type}s (user, ${type === 'project' ? 'name, description' : 'content'}, timestamp) VALUES (?, ?, ?)`);
-      stmt.run([user, type === 'project' ? name : name, type === 'project' ? description : null, new Date().toISOString()]);
-      stmt.free();
-      loadData(); // Recharger les données après insertion
+      const data = JSON.parse(localStorage.getItem('data') || '{"reports": [], "projects": [], "discussions": [], "missions": []}');
+      const newEntry = { user, timestamp: new Date().toISOString() };
+      if (type === 'report') newEntry.content = name;
+      if (type === 'project') { newEntry.name = name; newEntry.description = description; }
+      if (type === 'discussion' || type === 'mission') newEntry.content = name;
+      data[type + 's'].push(newEntry);
+      localStorage.setItem('data', JSON.stringify(data));
+      // Note: Synchronisation manuelle avec data.json requise ici (via API GitHub ou manuel)
     }
 
     function printOutput(text) {
@@ -315,12 +324,6 @@
 
     let currentUser = null;
     let awaitingPassword = false;
-
-    // Initialisation au chargement de la page
-    window.onload = async () => {
-      await initDB();
-      loadData();
-    };
 
     input.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && input.value.trim() !== '') {
@@ -354,6 +357,7 @@
               terminal.style.display = 'none';
               mainPage.style.display = 'flex';
               showSection(reportsSection);
+              loadData();
             }, 1000);
           } else {
             printOutput('Mot de passe incorrect.');
